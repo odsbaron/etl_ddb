@@ -20,7 +20,7 @@ class FakeStrategy:
     def is_duplicate(self, batch_id):
         return batch_id in self.duplicates
 
-    def pre_write(self, df, batch_id, session):
+    def pre_write(self, df, batch_id, session, db_path, table_name):
         self.pre_writes.append((batch_id, len(df)))
 
     def post_write(self, batch_id):

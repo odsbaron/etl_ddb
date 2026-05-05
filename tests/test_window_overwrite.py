@@ -35,7 +35,7 @@ class TestWindowOverwriteStrategy:
             "2025-06-01 11:00:00",
             "2025-06-01 12:00:00",
         ])})
-        strategy.pre_write(df, "batch_1", session)
+        strategy.pre_write(df, "batch_1", session, "dfs://db", "orders")
         assert len(session.scripts) == 1
         script = session.scripts[0]
         assert "delete from" in script.lower()

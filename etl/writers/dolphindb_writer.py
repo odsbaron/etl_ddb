@@ -18,7 +18,7 @@ class DolphinDBWriter(BaseWriter):
     def write_batch(self, df, batch_id: str):
         if self.strategy.is_duplicate(batch_id):
             return
-        self.strategy.pre_write(df, batch_id, self.session)
+        self.strategy.pre_write(df, batch_id, self.session, self.db_path, self.table_name)
         appender = ddb.TableAppender(self.table_name, self.db_path, self.session)
         appender.append(df)
         self.strategy.post_write(batch_id)

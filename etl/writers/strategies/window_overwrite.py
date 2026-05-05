@@ -6,11 +6,11 @@ class WindowOverwriteStrategy:
     def is_duplicate(self, batch_id):
         return batch_id in self.processed_batches
 
-    def pre_write(self, df, batch_id, session):
+    def pre_write(self, df, batch_id, session, db_path, table_name):
         ts_min = df[self.time_col].min()
         ts_max = df[self.time_col].max()
         script = f"""
-            t = loadTable('{{db_path}}','{{table_name}}')
+            t = loadTable('{db_path}','{table_name}')
             delete from t where {self.time_col} between {ts_min} : {ts_max}
         """
         session.run(script)
