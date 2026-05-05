@@ -1,0 +1,14 @@
+// Create composite partition database
+db1 = database("", VALUE, date(2022.01.01)..date(2024.12.31))
+db2 = database("", HASH, [SYMBOL, 20])
+db = database("dfs://target_db", COMPO, [db1, db2])
+
+// Define table schema
+schema = table(
+    1:0,
+    `orderId`customer`amt`updateTime,
+    [SYMBOL, STRING, DOUBLE, TIMESTAMP]
+)
+
+// Create distributed table
+db.createPartitionedTable(schema, `orders, `updateTime`orderId)
