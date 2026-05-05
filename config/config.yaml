@@ -20,6 +20,7 @@ jobs:
     mysql_table: orders
     dolphindb_table: orders
     incremental: true
+    incremental_col: last_modified
     time_column: last_modified
     writer_strategy: window_overwrite
     chunk_size: 100000
