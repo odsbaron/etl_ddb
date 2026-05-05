@@ -29,7 +29,10 @@ class MySQLChunkReader(BaseReader):
             yield df, batch_id
 
     def get_checkpoint(self) -> dict:
-        return {"last_val": self.last_val}
+        val = self.last_val
+        if hasattr(val, "item"):
+            val = val.item()
+        return {"last_val": val}
 
     def close(self):
         self.conn.close()
