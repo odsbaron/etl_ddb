@@ -1,19 +1,19 @@
 mysql:
-  host: 10.0.0.1
+  host: mysql-source
   port: 3306
   user: reader
   password: "pass"
   database: source_db
 
 dolphindb:
-  host: 10.0.0.2
+  host: dolphindb
   port: 8848
   user: admin
-  password: "pass"
+  password: "123456"
   db_path: "dfs://target_db"
 
 checkpoint:
-  db_path: "/opt/airflow/checkpoint.db"
+  db_path: "/opt/airflow/checkpoint/checkpoint.db"
 
 jobs:
   - name: order_sync
