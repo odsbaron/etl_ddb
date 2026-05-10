@@ -1,39 +1,133 @@
 mysql:
-  host: mysql-source
+  host: 192.168.2.154
   port: 3306
-  user: reader
-  password: "pass"
-  database: source_db
+  user: dsou
+  password: ""
+  password_keyring:
+    service: mysql
+    username: dsou
+  database: JYDB
 
 dolphindb:
-  host: dolphindb
-  port: 8848
-  user: admin
-  password: "123456"
-  db_path: "dfs://target_db"
+  host: 192.168.3.52
+  port: 8902
+  user: dsou
+  password: ""
+  password_keyring:
+    service: cluster
+    username: dsou
+  db_path: "dfs://user_dsou_jydb_202604"
 
 checkpoint:
-  db_path: "/opt/airflow/checkpoint/checkpoint.db"
+  db_path: "./checkpoint/checkpoint.db"
 
 jobs:
-  - name: order_sync
-    mysql_table: orders
-    dolphindb_table: orders
+  - name: secumain_test_sync
+    mysql_table: SecuMain
+    dolphindb_table: secumain_test
     incremental: true
-    incremental_col: last_modified
-    time_column: last_modified
+    incremental_col: ListedDate
+    initial_last_val: "1900-01-01 00:00:00"
+    time_column: listedDate
     writer_strategy: window_overwrite
-    chunk_size: 100000
+    chunk_size: 5
+    max_batches: 1
+    where: "SecuMarket=90 AND SecuCategory=1 AND ListedDate IS NOT NULL"
     field_mapping:
-      - mysql: order_id
-        dolphindb: orderId
+      - mysql: InnerCode
+        dolphindb: innerCode
+        type: INT
+      - mysql: SecuCode
+        dolphindb: secuCode
         type: SYMBOL
-      - mysql: customer
-        dolphindb: customer
+      - mysql: ChiName
+        dolphindb: chiName
         type: STRING
-      - mysql: amount
-        dolphindb: amt
-        type: DOUBLE
-      - mysql: last_modified
-        dolphindb: updateTime
+      - mysql: ListedDate
+        dolphindb: listedDate
+        type: TIMESTAMP
+
+  - name: secumain_sync
+    mysql_table: SecuMain
+    dolphindb_table: secumain
+    incremental: true
+    incremental_col: sjqy_update_time
+    cursor_columns:
+      - sjqy_update_time
+      - ID
+    initial_cursor:
+      sjqy_update_time: "1900-01-01 00:00:00"
+      ID: 0
+    time_column: sjqyUpdateTime
+    writer_strategy: key_delete_insert
+    key_columns:
+      - id
+    chunk_size: 100000
+    where: "sjqy_update_time IS NOT NULL"
+    field_mapping:
+      - mysql: ID
+        dolphindb: id
+        type: LONG
+      - mysql: InnerCode
+        dolphindb: innerCode
+        type: INT
+      - mysql: CompanyCode
+        dolphindb: companyCode
+        type: INT
+      - mysql: SecuCode
+        dolphindb: secuCode
+        type: SYMBOL
+      - mysql: ChiName
+        dolphindb: chiName
+        type: STRING
+      - mysql: ChiNameAbbr
+        dolphindb: chiNameAbbr
+        type: STRING
+      - mysql: EngName
+        dolphindb: engName
+        type: STRING
+      - mysql: EngNameAbbr
+        dolphindb: engNameAbbr
+        type: STRING
+      - mysql: SecuAbbr
+        dolphindb: secuAbbr
+        type: STRING
+      - mysql: ChiSpelling
+        dolphindb: chiSpelling
+        type: STRING
+      - mysql: SecuMarket
+        dolphindb: secuMarket
+        type: INT
+      - mysql: SecuCategory
+        dolphindb: secuCategory
+        type: INT
+      - mysql: ListedDate
+        dolphindb: listedDate
+        type: TIMESTAMP
+      - mysql: ListedSector
+        dolphindb: listedSector
+        type: INT
+      - mysql: ListedState
+        dolphindb: listedState
+        type: INT
+      - mysql: XGRQ
+        dolphindb: xgrq
+        type: TIMESTAMP
+      - mysql: JSID
+        dolphindb: jsid
+        type: LONG
+      - mysql: ISIN
+        dolphindb: isin
+        type: STRING
+      - mysql: ExtendedAbbr
+        dolphindb: extendedAbbr
+        type: STRING
+      - mysql: ExtendedSpelling
+        dolphindb: extendedSpelling
+        type: STRING
+      - mysql: sjqy_insert_time
+        dolphindb: sjqyInsertTime
+        type: TIMESTAMP
+      - mysql: sjqy_update_time
+        dolphindb: sjqyUpdateTime
         type: TIMESTAMP

@@ -1,7 +1,7 @@
 from etl.readers.mysql_chunk_reader import MySQLChunkReader
 from etl.transformers.base import DataTransformer
 from etl.writers.dolphindb_writer import DolphinDBWriter
-from etl.writers.strategies.window_overwrite import WindowOverwriteStrategy
+from etl.writers.strategies.factory import build_write_strategy
 
 
 class ETLPipeline:
@@ -15,10 +15,13 @@ class ETLPipeline:
         cp = self.checkpoint_mgr.load(self.job["name"])
         reader = MySQLChunkReader(self.mysql_cfg, self.job, cp)
         transformer = DataTransformer(self.job["field_mapping"])
-        strategy = WindowOverwriteStrategy(
-            self.job.get("time_column", "updateTime")
+        strategy = build_write_strategy(self.job)
+        writer = DolphinDBWriter(
+            self.ddb_cfg,
+            self.job["dolphindb_table"],
+            strategy,
+            self.job,
         )
-        writer = DolphinDBWriter(self.ddb_cfg, self.job["dolphindb_table"], strategy)
 
         try:
             for df, batch_id in reader.read_batches():

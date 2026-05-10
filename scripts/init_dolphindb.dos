@@ -1,14 +1,12 @@
-// Create composite partition database
-db1 = database("", VALUE, date(2022.01.01)..date(2024.12.31))
-db2 = database("", HASH, [SYMBOL, 20])
-db = database("dfs://target_db", COMPO, [db1, db2])
+// 创建日期值分区数据库（2020.01.01 ~ 2027.12.31，每天一个分区）
+db = database("dfs://user_dsou_jydb_202604", VALUE, date(1990.01.01)..date(2030.12.31))
 
-// Define table schema
+// 定义表结构
 schema = table(
     1:0,
     `orderId`customer`amt`updateTime,
     [SYMBOL, STRING, DOUBLE, TIMESTAMP]
 )
 
-// Create distributed table
-db.createPartitionedTable(schema, `orders, `updateTime`orderId)
+// 创建分布式表，按 updateTime 日期分区
+db.createPartitionedTable(schema, `orders, `updateTime)

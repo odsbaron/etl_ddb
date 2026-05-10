@@ -18,9 +18,17 @@ class DataTransformer:
             if col not in df.columns:
                 continue
             dtype = m.get("type")
-            if dtype == "DATE":
-                df[col] = pd.to_datetime(df[col]).dt.date
+            if dtype in {"INT", "LONG", "SHORT"}:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+            elif dtype in {"DOUBLE", "FLOAT"}:
+                df[col] = pd.to_numeric(df[col], errors="coerce")
+            elif dtype in {"STRING", "SYMBOL"}:
+                df[col] = df[col].astype("string")
+            elif dtype == "BOOL":
+                df[col] = df[col].astype("boolean")
+            elif dtype == "DATE":
+                df[col] = pd.to_datetime(df[col], errors="coerce").dt.date
             elif dtype == "TIMESTAMP":
-                df[col] = pd.to_datetime(df[col])
+                df[col] = pd.to_datetime(df[col], errors="coerce")
 
         return df

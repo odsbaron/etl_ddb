@@ -20,11 +20,11 @@ JOB_CFG = {
 
 class TestETLPipeline:
     @patch("etl.pipeline.DolphinDBWriter")
-    @patch("etl.pipeline.WindowOverwriteStrategy")
+    @patch("etl.pipeline.build_write_strategy")
     @patch("etl.pipeline.DataTransformer")
     @patch("etl.pipeline.MySQLChunkReader")
     def test_run_processes_all_batches_and_saves_checkpoints(
-        self, mock_reader_cls, mock_xfrm_cls, mock_strategy_cls, mock_writer_cls
+        self, mock_reader_cls, mock_xfrm_cls, mock_strategy_builder, mock_writer_cls
     ):
         checkpoint_mgr = MagicMock()
         checkpoint_mgr.load.return_value = {"last_val": "2025-01-01"}
@@ -45,7 +45,7 @@ class TestETLPipeline:
         mock_xfrm_cls.return_value = mock_xfrm
 
         mock_strategy = MagicMock()
-        mock_strategy_cls.return_value = mock_strategy
+        mock_strategy_builder.return_value = mock_strategy
 
         mock_writer = MagicMock()
         mock_writer_cls.return_value = mock_writer
@@ -53,6 +53,7 @@ class TestETLPipeline:
         pipeline = ETLPipeline(JOB_CFG, MYSQL_CFG, DDB_CFG, checkpoint_mgr)
         pipeline.run()
 
+        assert mock_writer_cls.call_args.args == (DDB_CFG, "orders", mock_strategy, JOB_CFG)
         assert mock_writer.write_batch.call_count == 2
         assert checkpoint_mgr.save.call_count == 2
         checkpoint_mgr.save.assert_has_calls([
@@ -61,11 +62,11 @@ class TestETLPipeline:
         ])
 
     @patch("etl.pipeline.DolphinDBWriter")
-    @patch("etl.pipeline.WindowOverwriteStrategy")
+    @patch("etl.pipeline.build_write_strategy")
     @patch("etl.pipeline.DataTransformer")
     @patch("etl.pipeline.MySQLChunkReader")
     def test_run_closes_reader_and_writer_on_success(
-        self, mock_reader_cls, mock_xfrm_cls, mock_strategy_cls, mock_writer_cls
+        self, mock_reader_cls, mock_xfrm_cls, mock_strategy_builder, mock_writer_cls
     ):
         checkpoint_mgr = MagicMock()
         checkpoint_mgr.load.return_value = {}
@@ -76,7 +77,7 @@ class TestETLPipeline:
         mock_reader_cls.return_value = mock_reader
 
         mock_xfrm_cls.return_value = MagicMock()
-        mock_strategy_cls.return_value = MagicMock()
+        mock_strategy_builder.return_value = MagicMock()
 
         mock_writer = MagicMock()
         mock_writer_cls.return_value = mock_writer
@@ -88,11 +89,11 @@ class TestETLPipeline:
         mock_writer.close.assert_called_once()
 
     @patch("etl.pipeline.DolphinDBWriter")
-    @patch("etl.pipeline.WindowOverwriteStrategy")
+    @patch("etl.pipeline.build_write_strategy")
     @patch("etl.pipeline.DataTransformer")
     @patch("etl.pipeline.MySQLChunkReader")
     def test_run_closes_reader_and_writer_on_exception(
-        self, mock_reader_cls, mock_xfrm_cls, mock_strategy_cls, mock_writer_cls
+        self, mock_reader_cls, mock_xfrm_cls, mock_strategy_builder, mock_writer_cls
     ):
         checkpoint_mgr = MagicMock()
         checkpoint_mgr.load.return_value = {}
@@ -102,7 +103,7 @@ class TestETLPipeline:
         mock_reader_cls.return_value = mock_reader
 
         mock_xfrm_cls.return_value = MagicMock()
-        mock_strategy_cls.return_value = MagicMock()
+        mock_strategy_builder.return_value = MagicMock()
 
         mock_writer = MagicMock()
         mock_writer_cls.return_value = mock_writer

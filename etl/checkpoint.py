@@ -1,10 +1,12 @@
 import sqlite3
 import json
 from datetime import datetime
+from pathlib import Path
 
 
 class CheckpointManager:
     def __init__(self, db_path):
+        Path(db_path).parent.mkdir(parents=True, exist_ok=True)
         self.conn = sqlite3.connect(db_path, check_same_thread=False)
         self._init_table()
 

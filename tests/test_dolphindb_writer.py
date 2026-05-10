@@ -1,6 +1,7 @@
 import pandas as pd
 import pytest
-from unittest.mock import MagicMock, patch, ANY
+from unittest.mock import MagicMock, patch
+
 from etl.writers.dolphindb_writer import DolphinDBWriter
 
 
@@ -8,6 +9,15 @@ DDB_CFG = {
     "host": "localhost", "port": 8848,
     "user": "admin", "password": "pass",
     "db_path": "dfs://test_db",
+}
+
+JOB_CFG = {
+    "dolphindb_table": "orders",
+    "time_column": "updateTime",
+    "field_mapping": [
+        {"mysql": "update_time", "dolphindb": "updateTime", "type": "TIMESTAMP"},
+        {"mysql": "secu_code", "dolphindb": "secuCode", "type": "SYMBOL"},
+    ],
 }
 
 
@@ -90,6 +100,32 @@ class TestDolphinDBWriter:
 
         mock_appender.append.assert_not_called()
         assert len(strategy.pre_writes) == 0
+
+    @patch("etl.writers.dolphindb_writer.build_bootstrap_script")
+    @patch("etl.writers.dolphindb_writer.ddb.Session")
+    def test_bootstrap_runs_once_when_job_config_provided(self, mock_session_cls, mock_bootstrap_script):
+        mock_session = MagicMock()
+        mock_session_cls.return_value = mock_session
+        mock_bootstrap_script.return_value = "bootstrap script"
+
+        writer = DolphinDBWriter(DDB_CFG, "orders", FakeStrategy(), JOB_CFG)
+        writer.bootstrap()
+        writer.bootstrap()
+
+        mock_bootstrap_script.assert_called_once_with({"db_path": "dfs://test_db"}, JOB_CFG)
+        mock_session.run.assert_called_once_with("bootstrap script")
+
+    @patch("etl.writers.dolphindb_writer.build_bootstrap_script")
+    @patch("etl.writers.dolphindb_writer.ddb.Session")
+    def test_bootstrap_skips_when_disabled(self, mock_session_cls, mock_bootstrap_script):
+        mock_session = MagicMock()
+        mock_session_cls.return_value = mock_session
+
+        writer = DolphinDBWriter(DDB_CFG, "orders", FakeStrategy(), {**JOB_CFG, "bootstrap": False})
+        writer.bootstrap()
+
+        mock_bootstrap_script.assert_not_called()
+        mock_session.run.assert_not_called()
 
     @patch("etl.writers.dolphindb_writer.ddb.Session")
     def test_close_closes_session(self, mock_session_cls):

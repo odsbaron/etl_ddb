@@ -15,6 +15,7 @@ JOB_CFG = {
     "dolphindb_table": "target_table",
     "chunk_size": 3,
     "incremental_col": "id",
+    "cursor_columns": ["id"],
     "time_column": "ts",
     "field_mapping": [
         {"mysql": "id", "dolphindb": "id", "type": None},
@@ -40,7 +41,7 @@ class FakeSession:
 
 
 class FakeAppender:
-    def __init__(self, table_name, db_path, session):
+    def __init__(self, db_path, table_name, session):
         self.session = session
 
     def append(self, df):
